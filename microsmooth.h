@@ -17,17 +17,6 @@ You should have received a copy of the GNU General Public License along with thi
 #ifndef MICROSMOOTH
 #define MICROSMOOTH
 
-/*Filter Codes*/
-#define SMA 0b00000001
-#define CMA 0b00000010
-#define EMA 0b00000100
-#define SGA 0b00001000
-#define KZA 0b00010000
-#define RDP 0b00100000
-#define KFA 0b01000000
-
-/*Algorithm Parameters*/
-
 /*
 These parameters should be tuned depending on need. Each of these parameters affects
 run time and signal smoothing obtained. See documentation for specific instructions 
@@ -47,12 +36,12 @@ on tuning these parameters.
 /*Savitzky Golay Filter -  */
 #ifndef SGA_LENGTH
 #define SGA_LENGTH 5 /* Window may 5, 7 or 9. 
-			 For window 5, only quadratic or cubic smoothing may be used */
+             For window 5, only quadratic or cubic smoothing may be used */
 #endif
 
 #ifndef SGA_DEGREE
 #define SGA_DEGREE 3 /* For quadratic or cubic smoothing, enter degree 3. 
-			For quartic or quintic smoothing, enter degree 4.*/
+            For quartic or quintic smoothing, enter degree 4.*/
 #endif
 
 #ifndef SGA_INDEX
@@ -61,37 +50,42 @@ on tuning these parameters.
 
 #define SGA_MAX_LENGTH 9 /* Do not change */
 
-/*Ramer Douglas Peucker -  */
-#ifndef RDP_LENGTH
-#define RDP_LENGTH 7
-#endif
+//simple moving average
+class SMAFilter {
+public:
+    SMAFilter();
+    int32_t calc(int32_t);
+private:
+    int32_t history[SMA_LENGTH];
+};
 
-#ifndef epsilon
-#define epsilon 50
-#endif
+//Exponential moving average
+class EMAFilter {
+public:
+    EMAFilter(uint8_t val);
+    EMAFilter();
+    int32_t calc(int32_t);
+private:
+    int32_t average;
+    uint8_t alpha;
+};
 
-/*Kolmogorov Zurbenko Filter-  */
-#ifndef KZA_LENGTH
-#define KZA_LENGTH 5 /* Window size may 3, 5, or 7 */
-#endif
-
-#ifndef KZA_MAX
-#define KZA_MAX 4 /* Number of iterations may be 2, 3 or 4 */
-#endif
-
-#define KZA_HISTORY_LENGTH ((KZA_LENGTH-1)*KZA_MAX)
-#define KZA_MID (KZA_HISTORY_LENGTH)/2
-
-/*Function Prototypes*/
-
-uint16_t* ms_init(uint8_t );
-int sma_filter(int current_value, uint16_t history_SMA[]);
-int cma_filter(int current_value, void * ptr); /*Pointer not needed. Maintaining consistent interface*/
-int ema_filter(int current_value, void * ptr); /*Pointer not needed. Maintaining consistent interface*/
-int sga_filter(int current_value, uint16_t history_SGA[]); /*Needs to be tested*/
-int kza_filter(int current_value, uint16_t history_KZA[]);
-int rdp_filter(int current_value, uint16_t history_RDP[]);/*Iterative neeeds testing*/
-int kfa_filter(int current_value, uint16_t history_KFA[]);/*Iterative neeeds testing*/
-void ms_deinit(uint16_t *);
+//Savitzky Golay filter
+class SGAFilter {
+public:
+    SGAFilter();
+    int32_t calc(int32_t);
+private:
+    /* SGA Coefficients*/
+    const int16_t sga_coefficients[5][SGA_MAX_LENGTH]={
+        {0, 0, -3, 12, 17, 12, -3, 0, 0},
+        {-21, 14, 39, 54, 59, 54, 39, 14, -21},
+        {15, -55, 30, 135, 179, 135, 30, -55, 15},
+        {0, -2, 3, 6, 7, 6, 3, -2, 0},
+        {0, 5, -30, 75, 131, 75, -30, 5, 0},
+    };
+    uint16_t normalization_value;
+    int32_t history[SGA_LENGTH];
+};
 
 #endif
